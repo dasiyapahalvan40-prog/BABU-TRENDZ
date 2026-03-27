@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babu Trendz - Seller Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; }
+        
+        /* Login Page */
+        .login-page, .dashboard { display: none; }
+        .login-page.active, .dashboard.active { display: block; }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+        button { width: 100%; padding: 14px; background: #ff6b6b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        
+        /* Dashboard */
+        .sidebar {
+            width: 250px;
+            background: #222;
+            color: white;
+            position: fixed;
+            height: 100%;
+            padding: 20px 0;
+        }
+        .sidebar a {
+            display: block;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar a:hover, .sidebar a.active { background: #ff6b6b; }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .product-form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .product-info {
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page active">
+        <div class="login-container">
+            <h2>Babu Trendz Seller</h2>
+            <p>अपना Seller Account में लॉगिन करें</p>
+            <input type="text" id="username" placeholder="Username (demo: seller)" value="seller">
+            <input type="password" id="password" placeholder="Password (demo: 1234)" value="1234">
+            <button onclick="login()">Login as Seller</button>
+            <p style="margin-top:20px; font-size:14px;">Demo: seller / 1234</p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="sidebar">
+            <h3 style="padding:20px; color:#ff6b6b;">Babu Trendz</h3>
+            <a href="#" class="active" onclick="showSection('dashboardSection')">Dashboard</a>
+            <a href="#" onclick="showSection('addProductSection')">Add New Product</a>
+            <a href="#" onclick="showSection('myProductsSection')">My Products</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h2>Seller Dashboard</h2>
+                <div>Welcome, <strong id="sellerName">Seller</strong></div>
+            </div>
+
+            <!-- Dashboard Overview -->
+            <div id="dashboardSection" class="section">
+                <h3>Overview</h3>
+                <p>यहाँ आपके स्टोर की जानकारी आएगी (Demo)</p>
+                <p>Total Products: <span id="totalProducts">0</span></p>
+            </div>
+
+            <!-- Add Product Form -->
+            <div id="addProductSection" class="section" style="display:none;">
+                <div class="product-form">
+                    <h3>Add New Product</h3>
+                    <input type="text" id="pName" placeholder="Product Name">
+                    <input type="text" id="pPrice" placeholder="Price (₹)">
+                    <input type="text" id="pImage" placeholder="Image URL (Unsplash)">
+                    <textarea id="pDesc" rows="3" placeholder="Description"></textarea>
+                    <button onclick="addProduct()">Add Product</button>
+                </div>
+            </div>
+
+            <!-- My Products -->
+            <div id="myProductsSection" class="section" style="display:none;">
+                <h3>My Products</h3>
+                <div class="product-grid" id="myProductsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if (user === "seller" && pass === "1234") {
+                document.getElementById('loginPage').classList.remove('active');
+                document.getElementById('dashboard').classList.add('active');
+                document.getElementById('sellerName').textContent = "Babu Ji";
+                showSection('dashboardSection');
+            } else {
+                alert("Wrong credentials! Use: seller / 1234");
+            }
+        }
+
+        function logout() {
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('loginPage').classList.add('active');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.getElementById(section).style.display = 'block';
+            
+            if (section === 'myProductsSection') {
+                renderMyProducts();
+            }
+        }
+
+        function addProduct() {
+            const name = document.getElementById('pName').value;
+            const price = document.getElementById('pPrice').value;
+            const img = document.getElementById('pImage').value || "https://via.placeholder.com/300";
+            const desc = document.getElementById('pDesc').value;
+
+            if (!name || !price) {
+                alert("Name और Price भरना जरूरी है");
+                return;
+            }
+
+            products.push({ name, price, img, desc });
+            alert(name + " प्रोडक्ट ऐड हो गया!");
+
+            // Clear form
+            document.getElementById('pName').value = '';
+            document.getElementById('pPrice').value = '';
+            document.getElementById('pImage').value = '';
+            document.getElementById('pDesc').value = '';
+
+            document.getElementById('totalProducts').textContent = products.length;
+        }
+
+        function renderMyProducts() {
+            const grid = document.getElementById('myProductsGrid');
+            grid.innerHTML = '';
+
+            products.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="\( {p.img}" alt=" \){p.name}">
+                    <div class="product-info">
+                        <h4>${p.name}</h4>
+                        <p><strong>₹${p.price}</strong></p>
+                        <button onclick="deleteProduct(${index})" style="background:red; color:white; width:100%; padding:8px; border:none; border-radius:6px; margin-top:10px;">Delete</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function deleteProduct(index) {
+            if (confirm("इस प्रोडक्ट को डिलीट करें?")) {
+                products.splice(index, 1);
+                renderMyProducts();
+                document.getElementById('totalProducts').textContent = products.length;
+            }
+        }
+
+        // Demo data
+        window.onload = function() {
+            products = [
+                { name: "Premium Wool Coat", price: "2999", img: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600", desc: "Winter special" },
+                { name: "Silk Blend Blazer", price: "2499", img: "https://images.unsplash.com/photo-1593778451990-0d8b114c3a67?w=600", desc: "Party wear" }
+            ];
+            document.getElementById('totalProducts').textContent = products.length;
+        };
+    </script>
+</body>
+</html>
